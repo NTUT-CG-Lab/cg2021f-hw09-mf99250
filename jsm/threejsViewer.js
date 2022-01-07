@@ -69,22 +69,81 @@ class threejsViewer {
             this.camera.updateProjectionMatrix();
         })
 
-        let mesh = null
+        let mesh = null;
 
-        this.loadData = (paddingData, size, isovalue) => {
-            mesh = new MarchingCubes(size)
-            mesh.material = new THREE.MeshPhongMaterial()
-            mesh.isolation = isovalue
-            mesh.field = paddingData
+        this.changeThreshold = (value) => {
+            console.log(value)
+            this.threshold = value
+        }
+
+        this.changeTextureOption = (value) =>{
+            console.log(value)
+            this.textureOption = value
+        }
+
+        this.loadData = () => {
+            if (mesh != undefined){
+                this.scene.remove(mesh)
+            }
+
+            mesh = new MarchingCubes(this.size)
+            if (this.textureOption == 0){
+                mesh.material = new THREE.MeshPhongMaterial({ color: 0xff00ff});
+            }
+            else if(this.textureOption == 1){
+                mesh.material = new THREE.MeshToonMaterial({ color: 0x00ffff});
+            }
+            // else if(this.textureOption == 3){
+            //     this.mesh.material = new THREE.MeshNormalMaterial({ color: 0xff00ff});
+            // }
+            
+            mesh.isolation = this.threshold
+            mesh.field = this.databuffer
 
             this.scene.add(mesh)
         }
 
-        this.download = () => {
-            mesh.generateGeometry()
-            return mesh
-        }
+        /*this.updateModel = () => {
+            this.mesh = this.scene.getObjectByName("mesh");
 
+            if(this.mesh == null || this.mesh==undefined){
+                this.mesh = new MarchingCubes(this.size);
+                this.mesh.name = "mesh";
+
+                if (this.textureOption == 0){
+                    this.mesh.material = new THREE.MeshPhongMaterial({ color: 0xff00ff});
+                }
+                else if(this.textureOption == 1){
+                    this.mesh.material = new THREE.MeshPhongMaterial({ color: 0xff00ff});
+                }
+                // else if(this.textureOption == 2){
+                //     this.mesh.material = new THREE.MeshToonMaterial({ color: 0xff00ff});
+                // }
+                // else if(this.textureOption == 3){
+                //     this.mesh.material = new THREE.MeshNormalMaterial({ color: 0xff00ff});
+                // }
+
+                this.mesh.isolation = this.threshold;
+                this.mesh.filed = this.databuffer;
+                this.mesh.position.set(0,1,0);
+                // this.mesh.scale.multiplyScalar(0.5);
+                console.log("ggg"+this.mesh)
+
+                this.scene.add(this.mesh);
+                return this.mesh;
+            }
+            else{
+                this.mesh.isolation = this.threshold;
+                this.mesh.filed = this.databuffer;
+                this.mesh.position.set(0,1,0);
+            }
+        }*/
+        
+        this.download = () =>{
+            let geometry = mesh.generateGeometry();
+            let mesh2 = new THREE.Mesh(geometry)
+            return mesh2;
+        }
         this.renderScene()
     }
 }

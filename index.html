@@ -131,16 +131,16 @@
 
             <!--閥值-->
             <div class="labelLayout">
-                <label for="isovalueSlider">閥值:0/0</label>
-                <input class="labelInput" id="isovalueSlider" type="range" name="settingForm" min=0 max=1000>
+                <label for="isovalueSlider" id ="isovalueTag">閥值:0/0</label>
+                <input class="labelInput" id="isovalueSlider" type="range" name="settingForm" min=0 max=255>
             </div>
 
             <!--紋理-->
             <div class="labelLayout">
                 <label>Texture:</label>
-                <select class="labelInput" name="settingForm">
+                <select class="labelInput" id="textureValueTag" name="settingForm">
                     <option value=0 selected>option 1</option>
-                    <option value=1>option 2</option>
+                    <option value=1 >option 2</option>
                 </select>
             </div>
 
@@ -172,9 +172,9 @@
             //addChild 要比 renderModal 先呼叫
             so.addChild("讀取文件並顯示資訊", 4, true);
             so.addChild("生成模型", 2, true);
-            so.addChild("閥值控制", 1, false);
-            so.addChild("文件下載", 1, false);
-            so.addChild("材質更換", 2, false);
+            so.addChild("閥值控制", 1, true);
+            so.addChild("文件下載", 1, true);
+            so.addChild("材質更換", 2, true);
 
             //產生自評表，參數如下所示
             so.renderModal(
@@ -241,37 +241,53 @@
             elements[0].addEventListener('change', (evt) => {
                 let fr = new FileReader()
 
+                //檢查內容
                 let files = evt.target.files
-                if (files.length <= 0) {
+                if(files.length <= 0){
                     return
                 }
 
                 let file = evt.target.files[0]
+
                 let filename = file.name
+
                 filename = filename.split('.')
-                let values = filename[0].split('_')
+                let values = filename[0].split('_') 
+                console.log(values)
 
                 let width = values[1]
                 let height = values[2]
                 let depth = values[3]
                 let byte = values[4]
 
-                let data = null
-                let paddingData = null 
-
                 let max = Math.max(width, height, depth)
 
+                let data = null
+                let paddingData = null 
+                
+
+                //讀檔後執行動作
                 fr.onload = () => {
                     let result = fr.result
-                    if (byte == 'uint8') {
+                    if(byte == 'uint8'){
                         data = new Uint8Array(result)
-                        //...//
+                        //implement//
                         paddingData = new Uint8Array(max * max * max)
 
-                        modelView.loadData(paddingData, max, 75)
+                        modelView.databuffer = data
+                        modelView.size = max
+                        modelView.threshold = 75
+                        modelView.loadData()
+
+                        var tag = document.getElementById("isovalueTag");
+                        tag.innerText = "閥值128/255";
+
                     }
+                    console.log(filename+"上傳成功")
+                    console.log(modelView)
                 }
 
+                //讓FileReader處理檔案
                 fr.readAsArrayBuffer(file)
             })
 
@@ -279,32 +295,54 @@
             elements[1].addEventListener('click', (evt) => {
                 let exporter = new STLExporter()
                 let mesh = modelView.download()
-                //let result = exporter.parse(mesh, {binary:true})
-                //let blob = new Blob([result], type:'application/octet-stream')
+
+                let result = exporter.parse(mesh, {binary: true})
+                let blob = new Blob([result], {type:'application/octet-stream'})
 
                 //or
 
-                //let result = exporter.parse(mesh, {binary:false})
-                //let blob = new Blob([result], type:'text/plain')
+                // let result = exporter.parse(mesh, {binary: false})
+                // let blob = new Blob([result], type:'text/plain')
 
                 let dlLink = document.createElement('a')
-                //...//
+                dlLink.href = URL.createObjectURL(blob)
+                dlLink.download = 'model.stl'
+                /*implement*/
                 dlLink.click()
             })
 
             // 閥值設定
             elements[2].addEventListener('click', (evt) => {
+                let isovalue = evt.srcElement.value
+                // modelView.loadData()
+                console.log(isovalue)
+                modelView.threshold = isovalue
+                var tag = document.getElementById("isovalueTag");
+                var slider = document.getElementById("isovalueSlider")
+                tag.innerText = "閥值:" + isovalue.toString() + "/" + slider.max.toString();
 
+                modelView.changeThreshold(isovalue)
+                modelView.loadData()
+                
             })
 
             // 紋理設置
             elements[3].addEventListener('change', (evt) => {
-
+                var value = document.getElementById("textureValueTag").value;
+                console.log(value)
+                modelView.changeTextureOption(value)
+                modelView.loadData()
             })
 
             // 模型網格顯示
             elements[4].addEventListener('change', (evt) => {
-                
+                //let exporter = new STLExporter()
+                //let mesh = modelView.download()
+                //let result = exporter.parse(mesh, {binary: true})
+                //...//
+                let selectedTextureIndex = evt.srcElement.value
+                /*implement*/
+                modelView.loadData()
             })
         }
 
